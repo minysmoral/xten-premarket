@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Оценка токена Extended (XTEN) по цене премаркета Hyperliquid: токеномика, метрики биржи, сравнение с перп-дексами, сценарии на TGE.">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>XTEN на премаркете</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Onest:wght@500;600;700&display=swap">
+<style>
+/* Layout: одноколоночная исследовательская записка шириной 920px. Сверху вывод и четыре ключевые цифры,
+   дальше секции «короткий текст + карточка с графиком». Один синий акцент отмечает Extended, конкуренты серые. */
+:root {
+  --page: #f4f6f9;
+  --surface: #ffffff;
+  --ink: #10141a;
+  --ink-2: #4a5361;
+  --muted: #667080;
+  --grid: #e4e8ee;
+  --axis: #c3cad4;
+  --border: rgba(16, 20, 26, 0.11);
+  --hover: rgba(16, 20, 26, 0.05);
+  --accent: #2a78d6;
+  --accent-track: #cde2fb;
+  --dim: #a3acb9;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --on-s4: #0b0b0b;
+  --down: #b42b2b;
+  --up: #006300;
+  --tip-bg: #10141a;
+  --tip-fg: #f4f6f9;
+  --tip-fg-2: #b9c0cb;
+  --font-display: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0e1014; --surface: #171a20; --ink: #eef0f3; --ink-2: #b9c0cb; --muted: #8a94a3;
+    --grid: #262b33; --axis: #3a414c; --border: rgba(255, 255, 255, 0.10); --hover: rgba(255, 255, 255, 0.06);
+    --accent: #3987e5; --accent-track: #1c3558; --dim: #4d5562;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --on-s4: #ffffff;
+    --down: #f0807f; --up: #3fbf3f;
+    --tip-bg: #eef0f3; --tip-fg: #10141a; --tip-fg-2: #4a5361;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0e1014; --surface: #171a20; --ink: #eef0f3; --ink-2: #b9c0cb; --muted: #8a94a3;
+  --grid: #262b33; --axis: #3a414c; --border: rgba(255, 255, 255, 0.10); --hover: rgba(255, 255, 255, 0.06);
+  --accent: #3987e5; --accent-track: #1c3558; --dim: #4d5562;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --on-s4: #ffffff;
+  --down: #f0807f; --up: #3fbf3f;
+  --tip-bg: #eef0f3; --tip-fg: #10141a; --tip-fg-2: #4a5361;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font-body);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap {
+  max-width: 920px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+h1, h2, h3, p, ul, ol, figure, table { margin: 0; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.75rem, 1.2rem + 2.6vw, 2.625rem); line-height: 1.1; font-weight: 700; }
+h2 { font-size: 1.375rem; line-height: 1.25; font-weight: 600; }
+h3 { font-size: 0.9375rem; line-height: 1.35; font-weight: 600; }
+p, li { max-width: 68ch; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+strong { font-weight: 600; }
+
+.eyebrow { font: 500 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.head { display: flex; flex-direction: column; gap: 16px; }
+.lead { font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.25rem); line-height: 1.5; color: var(--ink); max-width: 62ch; }
+.note { font-size: 0.8125rem; line-height: 1.5; color: var(--muted); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 20px; }
+.kpi { border-top: 1px solid var(--axis); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi-label { font-size: 0.8125rem; color: var(--ink-2); }
+.kpi-value { font: 600 1.75rem/1.1 var(--font-body); }
+.kpi-sub { font-size: 0.8125rem; color: var(--muted); }
+.kpi-sub.down { color: var(--down); }
+
+section { display: flex; flex-direction: column; gap: 16px; }
+.prose { display: flex; flex-direction: column; gap: 10px; }
+.prose ul { padding-left: 1.15em; display: flex; flex-direction: column; gap: 6px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 16px 12px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.card-sub { font-size: 0.8125rem; color: var(--muted); }
+.chart { margin-top: 8px; min-width: 0; }
+.chart svg { display: block; width: 100%; outline-offset: 2px; }
+.chart svg:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.axis { stroke: var(--axis); stroke-width: 1; }
+.tick { fill: var(--muted); font: 400 11px var(--font-body); font-variant-numeric: tabular-nums; }
+.line { stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.area { fill: var(--accent); fill-opacity: 0.1; }
+.dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.dlabel { fill: var(--ink); font: 500 12px var(--font-body); font-variant-numeric: tabular-nums; }
+.cross { stroke: var(--axis); stroke-width: 1; }
+.bar { fill: var(--accent); }
+.bar.is-dim { fill: var(--dim); }
+.bar.is-hot { fill-opacity: 0.75; }
+.refline { stroke: var(--ink-2); stroke-width: 1.5; }
+
+details.tbl { margin-top: 6px; font-size: 0.8125rem; }
+details.tbl summary { cursor: pointer; color: var(--muted); width: fit-content; }
+.scroll-x { overflow-x: auto; }
+.scroll-y { max-height: 260px; overflow-y: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; }
+th:first-child, td:first-child { text-align: left; }
+td.wrap-ok, th.wrap-ok { white-space: normal; text-align: left; min-width: 220px; }
+tr.is-x td { font-weight: 600; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: baseline; }
+
+.rank { display: grid; gap: 4px; margin-top: 10px; }
+.rank-row { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px; font-size: 0.8125rem; padding: 3px 6px; margin-inline: -6px; border-radius: 4px; }
+.rank-row:hover, .rank-row:focus-visible { background: var(--hover); }
+.rank-name { color: var(--ink-2); white-space: nowrap; }
+.rank-row.is-x .rank-name { color: var(--ink); font-weight: 600; }
+.rank-track { display: flex; align-items: center; gap: 6px; min-width: 0; border-left: 1px solid var(--axis); }
+.rank-bar { flex: 0 0 auto; height: 12px; width: calc((100% - 62px) * var(--p)); min-width: 2px; background: var(--dim); border-radius: 0 4px 4px 0; }
+.rank-row.is-x .rank-bar { background: var(--accent); }
+.rank-val { color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rank-row.is-x .rank-val { font-weight: 600; }
+.rank-na { color: var(--muted); padding-left: 6px; }
+
+.seg { display: flex; gap: 2px; height: 28px; margin-top: 12px; }
+.seg-part { flex: var(--w) 1 0; min-width: 0; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: #ffffff; white-space: nowrap; }
+.seg-part:nth-child(1) { background: var(--s1); }
+.seg-part:nth-child(2) { background: var(--s2); }
+.seg-part:nth-child(3) { background: var(--s3); }
+.seg-part:nth-child(4) { background: var(--s4); color: var(--on-s4); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 0.8125rem; color: var(--ink-2); }
+.sw1 { background: var(--s1); } .sw2 { background: var(--s2); } .sw3 { background: var(--s3); } .sw4 { background: var(--s4); }
+
+.meters { display: grid; gap: 14px; margin-top: 12px; }
+.meter-row { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr) 96px; gap: 6px 14px; align-items: center; font-size: 0.875rem; }
+.meter-name { color: var(--ink-2); }
+.meter-track { height: 8px; border-radius: 4px; background: var(--accent-track); }
+.meter-fill { height: 100%; width: var(--p); border-radius: 4px; background: var(--accent); }
+.meter-val { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.scen { display: grid; gap: 12px; margin-top: 12px; }
+.scen-row { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 6px 18px; align-items: center; }
+.scen-name { font-size: 0.875rem; }
+.scen-name span { display: block; color: var(--muted); font-size: 0.8125rem; }
+.scen-track { position: relative; height: 30px; border-bottom: 1px solid var(--grid); }
+.scen-track::after { content: ""; position: absolute; top: 0; bottom: 0; left: 38.9%; width: 1.5px; background: var(--ink-2); }
+.scen-bar { position: absolute; top: 9px; height: 12px; border-radius: 4px; background: var(--accent); left: var(--a); width: var(--b); }
+.scen-head, .scen-axis { position: relative; height: 18px; font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.scen-head b { position: absolute; left: 38.9%; transform: translateX(-50%); white-space: nowrap; font-weight: 500; color: var(--ink); }
+.scen-axis i { position: absolute; top: 2px; font-style: normal; transform: translateX(-50%); }
+.scen-axis i:first-child { transform: none; }
+.scen-axis i:last-child { transform: translateX(-100%); }
+
+.sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 32px; }
+.sides h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sides ul { padding-left: 1.15em; display: flex; flex-direction: column; gap: 6px; font-size: 0.9375rem; }
+.ico { font-size: 0.75rem; }
+.ico.down { color: var(--down); }
+.ico.up { color: var(--up); }
+
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--tip-bg); color: var(--tip-fg); border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; line-height: 1.4; max-width: 260px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); }
+#tip .tip-title { color: var(--tip-fg-2); margin-bottom: 2px; }
+#tip .tip-row strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+#tip .tip-row span { color: var(--tip-fg-2); }
+
+footer { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--axis); padding-top: 20px; font-size: 0.8125rem; color: var(--ink-2); }
+footer ul { padding-left: 1.15em; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; }
+footer li { max-width: none; overflow-wrap: anywhere; }
+
+@media (max-width: 760px) {
+  .wrap { gap: 44px; padding-block: 28px 48px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .two, .sides, footer ul { grid-template-columns: minmax(0, 1fr); }
+  .meter-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .meter-name { grid-column: 1 / -1; }
+  .scen-row { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+
+  <header class="head">
+    <div class="eyebrow">XTEN · премаркет Hyperliquid · 19 ноября 2026</div>
+    <h1>Extended на премаркете: дорого или дёшево</h1>
+    <p class="lead">По $0.195 XTEN оценён примерно справедливо для перп-декса второго эшелона, скидки нет. Базовый сценарий: на TGE фармеры продавят цену, а дальше всё решит, запустят ли реальный байбек.</p>
+    <p class="note">Это разбор данных, а не персональная инвестрекомендация. Источники: API Hyperliquid, DefiLlama, CoinGecko и документация Extended.</p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-label">Цена на премаркете</span><span class="kpi-value">$0.195</span><span class="kpi-sub down">▼ 33% от закрытия 30.10</span></div>
+    <div class="kpi"><span class="kpi-label">FDV</span><span class="kpi-value">$195M</span><span class="kpi-sub">1 млрд XTEN, новой эмиссии нет</span></div>
+    <div class="kpi"><span class="kpi-label">Флоат на TGE</span><span class="kpi-value">$58M</span><span class="kpi-sub">30% сапплая, весь у фармеров</span></div>
+    <div class="kpi"><span class="kpi-label">Стоимость поинта</span><span class="kpi-value">$0.83</span><span class="kpi-sub">4.29 XTEN за поинт</span></div>
+  </div>
+
+  <section>
+    <h2>Премаркет: минус треть за три недели</h2>
+    <div class="card">
+      <h3>Цена XTEN на Hyperliquid</h3>
+      <div class="card-sub">Закрытие дня с листинга 27 октября. Последняя точка: цена на момент обновления</div>
+      <div class="chart" id="c-price"></div>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>От пика $0.325 в день листинга цена ушла на 40%, от максимального закрытия $0.289 на 33%. За последние сутки отскок на 6% с $0.183.</li>
+        <li>Рынок очень тонкий: открытый интерес около $1.7M против аирдропа на $58M, глубина стакана в пределах ±2% всего $3–6k.</li>
+        <li>Захеджировать аирдроп там нельзя, поэтому цена премаркета слабый сигнал, а основные продажи ещё впереди.</li>
+        <li>Фандинг слегка положительный, 5–9% годовых. Перекоса в шорт нет, значит, и топлива для сквиза тоже.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Токеномика: весь флоат уходит фармерам</h2>
+    <div class="card">
+      <h3>Распределение 1 млрд XTEN</h3>
+      <div class="card-sub">В порядке выхода на рынок</div>
+      <div class="seg" id="seg" role="img" aria-label="Аирдроп 30%, экосистемный фонд 5%, резерв стейкинга 15%, команда и инвесторы 50%">
+        <div class="seg-part" style="--w:30"><span>30%</span></div>
+        <div class="seg-part" style="--w:5"><span>5%</span></div>
+        <div class="seg-part" style="--w:15"><span>15%</span></div>
+        <div class="seg-part" style="--w:50"><span>50%</span></div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw1"></i>Аирдроп фармерам</span>
+        <span><i class="swatch sw2"></i>Экосистемный фонд</span>
+        <span><i class="swatch sw3"></i>Резерв стейкинга</span>
+        <span><i class="swatch sw4"></i>Команда и инвесторы</span>
+      </div>
+      <div class="scroll-x" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Доля</th><th>Токены</th><th class="wrap-ok">Когда разлочится</th></tr></thead>
+          <tbody>
+            <tr><td>Аирдроп фармерам</td><td>300M · 30%</td><td class="wrap-ok">Полностью на TGE. Из них 17.4M принадлежат X10, это поинты внутреннего маркет-мейкера.</td></tr>
+            <tr><td>Экосистемный фонд</td><td>50M · 5%</td><td class="wrap-ok">28.6M разлочено на TGE, 21.4M под инвесторским локом.</td></tr>
+            <tr><td>Резерв стейкинга</td><td>150M · 15%</td><td class="wrap-ok">Раздаётся стейкерам как награды. График обещают до TGE.</td></tr>
+            <tr><td>Команда и инвесторы</td><td>500M · 50%</td><td class="wrap-ok">Ноль первые 12 месяцев. Инвесторам 25% клиффом, остальное до 48-го месяца. Команде равными долями с 13-го по 48-й.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>Дата TGE не объявлена. Подписать условия аирдропа можно до 31 декабря 2026, кто подписал до TGE, получает токены к старту торгов.</li>
+        <li>Стейкинг работает с первого дня: скидки на комиссии от 5 до 30%, буст доходности волта, анстейк 7 дней. Часть активных трейдеров токен застейкает.</li>
+        <li>Через год флоат начнёт расти быстро: за месяцы 12–48 в рынок выходит ещё около 520M XTEN при стартовых 330M.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Метрики биржи идут вниз с февраля</h2>
+    <div class="two">
+      <div class="card">
+        <h3>TVL Extended, $M</h3>
+        <div class="card-sub">Пик $218M в феврале, сейчас на 55% ниже</div>
+        <div class="chart" id="c-tvl"></div>
+      </div>
+      <div class="card">
+        <h3>Комиссии по месяцам, $M</h3>
+        <div class="card-sub">Валовые, до ребейтов мейкерам. Ноябрь неполный</div>
+        <div class="chart" id="c-fees"></div>
+      </div>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>За 30 дней: объём $6.3B (19-е место среди перп-дексов на DefiLlama), открытый интерес $49M, комиссии $1.43M.</li>
+        <li>Поинты закончились 6 ноября. С 1 по 18 ноября TVL упал со $110.6M до $95.0M, 19 ноября отскочил до $98.4M. Открытый интерес за неделю снизился на 22%.</li>
+        <li>Недельный темп комиссий уже около $13.5M в год против $17.4M по 30 дням.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Сравнение с другими дексами</h2>
+    <div class="prose">
+      <p>Extended выделен синим. По комиссиям он стоит как edgeX и в 3–7 раз дешевле топ-3. По TVL самый дешёвый из новых, но этот TVL держался на фарме поинтов. По объёму и открытому интересу он дороже edgeX и GRVT в 2–8 раз.</p>
+    </div>
+    <div class="two">
+      <div class="card"><h3>FDV к годовым комиссиям</h3><div class="card-sub">Комиссии за 30 дней × 12</div><div class="rank" id="r0"></div></div>
+      <div class="card"><h3>FDV к TVL</h3><div class="card-sub">Сколько долларов оценки на доллар депозитов</div><div class="rank" id="r1"></div></div>
+      <div class="card"><h3>FDV на $1B объёма</h3><div class="card-sub">Объём перпов за 30 дней</div><div class="rank" id="r2"></div></div>
+      <div class="card"><h3>FDV к открытому интересу</h3><div class="card-sub">Чем выше, тем дороже на единицу позиций</div><div class="rank" id="r3"></div></div>
+    </div>
+    <div class="card">
+      <h3>Исходные цифры</h3>
+      <div class="card-sub">Капа XTEN посчитана по флоату 300M и цене премаркета</div>
+      <div class="scroll-x" style="margin-top:8px"><table id="t-peers"></table></div>
+    </div>
+    <p class="note">Предупреждение из истории edgeX: за год биржа собрала $189M комиссий, а текущий темп после TGE около $23.4M в год.</p>
+  </section>
+
+  <section>
+    <h2>Трежери и байбек: главная неизвестная</h2>
+    <div class="card">
+      <h3>Сколько флоата мог бы выкупить трежери</h3>
+      <div class="card-sub">Доля от $58M флоата по цене премаркета</div>
+      <div class="meters">
+        <div class="meter-row"><span class="meter-name">$18M: половина собранных комиссий, по статье со ссылкой на CEO</span><div class="meter-track"><div class="meter-fill" style="--p:31%"></div></div><span class="meter-val">31% флоата</span></div>
+        <div class="meter-row"><span class="meter-name">$40M: верхняя оценка, не подтверждена</span><div class="meter-track"><div class="meter-fill" style="--p:69%"></div></div><span class="meter-val">69% флоата</span></div>
+      </div>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>Оценка $40M ничем не подтверждена. Она близка к валовым комиссиям с августа 2025 ($36.3M), но из них платятся ребейты, доходность волта и операционные расходы. Ещё $19M привлечено от инвесторов: $6.5M сид и $12.5M от eToro и Jump.</li>
+        <li>Официальная документация обязательств не даёт: группа «может» покупать XTEN, детали появятся, «если и когда программа будет запущена».</li>
+        <li>Текущий поток при 50% комиссий на выкуп дал бы $7–9M в год, это 12–15% флоата.</li>
+        <li>Его съедают эмиссии стейкинга. Если 150M XTEN раздадут за четыре года (допущение), это около $7M в год по текущей цене.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Фармеры: большинство в плюсе</h2>
+    <div class="card">
+      <h3>Оценка себестоимости поинта по месяцам, $</h3>
+      <div class="card-sub">Комиссии месяца, делённые на выданные поинты. Линия показывает стоимость поинта по премаркету</div>
+      <div class="chart" id="c-cost"></div>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>70M поинтов делят 300M XTEN, это 4.29 XTEN, или $0.83 за поинт. Средняя себестоимость по комиссиям около $0.52.</li>
+        <li>Около 80% поинтов получены дешевле $0.83: весь 2025 год, апрель–май и лето 2026. Около 20% получены дороже: январь–март, июнь и октябрь 2026.</li>
+        <li>Покупатели поинтов на OTC по $2–3 сидят в минусе 58–72%.</li>
+        <li>Убыточные фармеры тоже часто продают: затраты уже невозвратные.</li>
+      </ul>
+      <p class="note">Модель: 1.2M поинтов в неделю с 29 апреля 2025, примерно с февраля 2026 по 600k, с октября остаток до капа 70M. Дату снижения темпа Extended не публиковал, она восстановлена по контрольным точкам (68.7M на 29 сентября, 70M на 5 ноября). До сентября 2025 выдано около 30% поинтов, данных по комиссиям за этот период нет или они неполные, объёмы тогда были маленькие. Поинты получали также мейкеры, вкладчики волта и рефералы, так что тейкеру поинт обходился дороже среднего.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Задампят или запампят</h2>
+    <div class="card">
+      <h3>Сценарии цены по мультипликаторам аналогов</h3>
+      <div class="card-sub">Диапазон цены XTEN, $</div>
+      <div class="scen">
+        <div class="scen-row"><span></span><div class="scen-head"><b>Премаркет $0.195</b></div></div>
+        <div class="scen-row"><div class="scen-name">Медвежий · $0.07–0.10<span>Байбека нет, комиссии падают дальше. FDV $70–100M</span></div><div class="scen-track"><div class="scen-bar" style="--a:14%;--b:6%"></div></div></div>
+        <div class="scen-row"><div class="scen-name">Базовый · $0.15–0.21<span>Оценка как у edgeX. FDV $150–210M</span></div><div class="scen-track"><div class="scen-bar" style="--a:30%;--b:12%"></div></div></div>
+        <div class="scen-row"><div class="scen-name">Бычий · $0.30–0.45<span>Байбек объявлен, трежери в деле. FDV $300–450M</span></div><div class="scen-track"><div class="scen-bar" style="--a:60%;--b:30%"></div></div></div>
+        <div class="scen-row"><span></span><div class="scen-axis"><i style="left:0">$0</i><i style="left:20%">0.10</i><i style="left:40%">0.20</i><i style="left:60%">0.30</i><i style="left:80%">0.40</i><i style="left:100%">0.50</i></div></div>
+      </div>
+    </div>
+    <div class="sides">
+      <div>
+        <h3><span class="ico down">▼</span>За слив</h3>
+        <ul>
+          <li>Весь флоат у фармеров без локов, и большинство в плюсе.</li>
+          <li>Поинты кончились, ликвидность и открытый интерес уже уходят.</li>
+          <li>Все перп-токены последнего года торгуются на 62–97% ниже максимумов. Paradex стоит $26M FDV.</li>
+          <li>Премаркет потерял треть за три недели без реального предложения.</li>
+        </ul>
+      </div>
+      <div>
+        <h3><span class="ico up">▲</span>Против слива</h3>
+        <ul>
+          <li>Флоат всего $58M, трежери может выкупить заметную его часть.</li>
+          <li>Команда и инвесторы залочены на год.</li>
+          <li>Ожидания уже низкие: FDV ниже $300M, по которым команда, по её словам, отказывалась от раундов.</li>
+          <li>Стейкинг даёт скидки на комиссии и буст волта.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prose">
+      <p><strong>Оценка: примерно 60 на 40, что первые дни и недели после TGE пройдут ниже текущих $0.195.</strong> Главный триггер в обратную сторону — анонс байбека и график эмиссий до TGE.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div>Данные обновлены 19 ноября 2026, около 14:45 UTC. Цена и открытый интерес премаркета: API Hyperliquid. Капитализации: API CoinGecko. Комиссии, TVL и объёмы: DefiLlama.</div>
+    <ul>
+      <li><a href="https://docs.extended.exchange/extended-resources/xten/tokenomics">Extended docs: Tokenomics</a></li>
+      <li><a href="https://docs.extended.exchange/extended-resources/xten/burn-and-buybacks">Extended docs: Burn and Buybacks</a></li>
+      <li><a href="https://docs.extended.exchange/extended-resources/xten/airdrop-distribution">Extended docs: Airdrop Distribution</a></li>
+      <li><a href="https://docs.extended.exchange/extended-resources/points-program">Extended docs: Points Program</a></li>
+      <li><a href="https://docs.extended.exchange/extended-resources/xten/staking">Extended docs: Staking</a></li>
+      <li><a href="https://defillama.com/perps">DefiLlama: perps</a></li>
+      <li><a href="https://medium.com/coinmonks/extended-the-perp-dex-built-for-traders-0006bf16453d">Coinmonks: статья про трежери и байбек</a></li>
+      <li><a href="https://thedefiant.io/news/tokens/extended-sets-final-xten-airdrop-rate-as-xpoints-program-ends">The Defiant: финальный курс поинта</a></li>
+      <li><a href="https://x.com/extendedapp/status/1917526395384746254">Extended в X: старт поинтов</a></li>
+      <li><a href="https://airdrops.io/extended/">Airdrops.io: Extended</a></li>
+      <li><a href="https://x.com/CallumOnCrypto/status/1977421287334224008">Callum в X: OTC-цены поинтов</a></li>
+    </ul>
+  </footer>
+</main>
+
+<div id="tip" role="status" hidden></div>
+
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  var MON = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+  var MONF = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+  var MONG = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+  var PX = [["2026-10-27",0.26186],["2026-10-28",0.26338],["2026-10-29",0.2741],["2026-10-30",0.28897],["2026-10-31",0.28163],["2026-11-01",0.27547],["2026-11-02",0.23669],["2026-11-03",0.24694],["2026-11-04",0.24812],["2026-11-05",0.24362],["2026-11-06",0.23705],["2026-11-07",0.23788],["2026-11-08",0.22922],["2026-11-09",0.24429],["2026-11-10",0.24496],["2026-11-11",0.22935],["2026-11-12",0.20673],["2026-11-13",0.20385],["2026-11-14",0.19637],["2026-11-15",0.18674],["2026-11-16",0.188],["2026-11-17",0.18274],["2026-11-18",0.19486],["2026-11-19",0.1946]];
+  var TVL = [["2025-08-01",33.2],["2025-08-08",33.7],["2025-08-15",38.5],["2025-08-22",40.1],["2025-08-29",37.2],["2025-09-05",36.5],["2025-09-12",45.3],["2025-09-19",52.1],["2025-09-26",52.9],["2025-10-03",56.5],["2025-10-10",66.7],["2025-10-17",81.4],["2025-10-24",89.1],["2025-10-31",94.4],["2025-11-07",95.2],["2025-11-14",102.5],["2025-11-21",100.5],["2025-11-28",96.4],["2025-12-05",100.3],["2025-12-12",99.1],["2025-12-19",114.0],["2025-12-26",116.9],["2026-01-02",131.6],["2026-01-09",159.3],["2026-01-16",196.0],["2026-01-23",208.9],["2026-01-30",207.9],["2026-02-04",218.2],["2026-02-06",215.3],["2026-02-13",214.6],["2026-02-20",211.0],["2026-02-27",207.5],["2026-03-06",201.5],["2026-03-13",197.4],["2026-03-20",193.9],["2026-03-27",186.0],["2026-04-03",184.6],["2026-04-10",180.0],["2026-04-17",177.0],["2026-04-24",168.7],["2026-05-01",160.9],["2026-05-08",157.4],["2026-05-15",153.4],["2026-05-22",151.5],["2026-05-29",150.5],["2026-06-05",146.9],["2026-06-12",140.6],["2026-06-19",139.0],["2026-06-26",140.0],["2026-07-03",136.9],["2026-07-10",137.0],["2026-07-17",134.6],["2026-07-24",134.4],["2026-07-31",131.4],["2026-08-07",128.1],["2026-08-14",125.1],["2026-08-21",124.6],["2026-08-28",123.5],["2026-09-04",122.0],["2026-09-11",119.3],["2026-09-18",119.7],["2026-09-25",119.0],["2026-10-02",121.6],["2026-10-09",122.5],["2026-10-16",119.4],["2026-10-23",116.5],["2026-10-30",111.3],["2026-11-06",104.8],["2026-11-13",100.1],["2026-11-18",95.0],["2026-11-19",98.4]];
+  var FEES = [["2025-08",0.3,"с 16 августа"],["2025-09",0.83],["2025-10",2.64],["2025-11",3.1],["2025-12",3.45],["2026-01",5.99],["2026-02",3.62],["2026-03",2.83],["2026-04",2.12],["2026-05",2.04],["2026-06",2.18],["2026-07",1.73],["2026-08",1.6],["2026-09",1.63],["2026-10",1.55],["2026-11",0.74,"1–18 ноября"]];
+  // месяц, комиссии $M, поинты по модели M, $ за поинт
+  var COST = [["2025-09",0.83,5.14,0.16],["2025-10",2.64,5.31,0.5],["2025-11",3.1,5.14,0.6],["2025-12",3.45,5.31,0.65],["2026-01",5.99,5.31,1.13],["2026-02",3.62,3.0,1.21],["2026-03",2.83,2.66,1.07],["2026-04",2.12,2.57,0.82],["2026-05",2.04,2.66,0.77],["2026-06",2.18,2.57,0.85],["2026-07",1.73,2.66,0.65],["2026-08",1.6,2.66,0.6],["2026-09",1.63,2.47,0.66],["2026-10",1.55,1.06,1.46]];
+  // m: FDV/комиссии, FDV/TVL, FDV на $1B объёма ($M), FDV/OI
+  var PEERS = [
+    { n: 'Hyperliquid', fdv: 65460, mc: 16382, fees: 101.82, tvl: 5740, vol: 276.1, oi: 5481, m: [53, 11.4, 237, 11.9] },
+    { n: 'Aster', fdv: 4019, mc: 1328, fees: 4.51, tvl: 727, vol: 51.4, oi: 1175, m: [73, 5.5, 78, 3.4] },
+    { n: 'Lighter', fdv: 2904, mc: 739, fees: 6.92, tvl: 669, vol: 84.1, oi: 584, m: [34, 4.3, 35, 5.0] },
+    { n: 'edgeX', fdv: 279, mc: 98, fees: 1.92, tvl: 58, vol: 17.1, oi: 135, m: [12.0, 4.8, 16, 2.1] },
+    { n: 'GRVT', fdv: 165, mc: 19, fees: null, tvl: 36, vol: 15.5, oi: 337, m: [null, 4.6, 11, 0.5] },
+    { n: 'Extended', x: true, fdv: 195, mc: 58, fees: 1.43, tvl: 98, vol: 6.3, oi: 49, m: [11.2, 2.0, 31, 4.0] },
+    { n: 'GMX', fdv: 78, mc: 78, fees: 4.24, tvl: 215, vol: 19.7, oi: 213, m: [1.5, 0.4, 4, 0.4] },
+    { n: 'Avantis', fdv: 73, mc: 28, fees: 1.25, tvl: 12, vol: 18.4, oi: 57, m: [4.8, 6.1, 4, 1.3] },
+    { n: 'ApeX', fdv: 75, mc: 24, fees: 0.34, tvl: 29, vol: 9.9, oi: 59, m: [18.1, 2.5, 8, 1.3] }
+  ];
+
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function h(tag, cls, text, parent) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function money(v) {
+    if (v >= 10000) return '$' + (v / 1000).toFixed(1) + 'B';
+    if (v >= 1000) return '$' + (v / 1000).toFixed(2) + 'B';
+    return '$' + Math.round(v) + 'M';
+  }
+  function dayLabel(d) { var p = d.split('-'); return (+p[2]) + ' ' + MONG[+p[1] - 1] + ' ' + p[0]; }
+  function monLabel(d) { var p = d.split('-'); return MONF[+p[1] - 1] + ' ' + p[0]; }
+  function monShort(d) { var p = d.split('-'); return MON[+p[1] - 1] + ' ' + p[0].slice(2); }
+
+  var tip = document.getElementById('tip');
+  function showTip(lines, x, y) {
+    tip.textContent = '';
+    lines.forEach(function (ln, i) {
+      var row = h('div', i === 0 && ln.v == null ? 'tip-title' : 'tip-row', null, tip);
+      if (ln.v != null) { h('strong', null, ln.v, row); h('span', null, ' ' + ln.k, row); }
+      else row.textContent = ln.k;
+    });
+    tip.hidden = false;
+    var r = tip.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    var left = x + 14;
+    if (left + r.width > vw - 8) left = x - r.width - 14;
+    if (left < 8) left = 8;
+    var top = y - r.height - 12;
+    if (top < 8) top = y + 16;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideTip() { tip.hidden = true; }
+
+  var redraws = [];
+  function responsive(host, draw) {
+    var last = -1;
+    function run() { var w = Math.round(host.clientWidth); if (w && w !== last) { last = w; draw(w); } }
+    redraws.push(run);
+    run();
+  }
+  function tableView(card, heads, rows) {
+    var d = h('details', 'tbl', null, card);
+    h('summary', null, 'Данные таблицей', d);
+    var box = h('div', 'scroll-x scroll-y', null, d);
+    var t = h('table', null, null, box), tr = h('tr', null, null, h('thead', null, null, t));
+    heads.forEach(function (x) { h('th', null, x, tr); });
+    var tb = h('tbody', null, null, t);
+    rows.forEach(function (r) { var row = h('tr', null, null, tb); r.forEach(function (c) { h('td', null, c, row); }); });
+  }
+
+  function lineChart(host, o) {
+    var data = o.data.map(function (d) { return { t: Date.parse(d[0] + 'T00:00:00Z'), v: d[1], d: d[0] }; });
+    responsive(host, function (W) {
+      var H = o.height || 230, m = { t: 22, r: o.padRight || 16, b: 26, l: 40 };
+      host.textContent = '';
+      var s = el('svg', { height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': o.label, tabindex: 0 }, host);
+      var x0 = data[0].t, x1 = data[data.length - 1].t;
+      var X = function (t) { return m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r); };
+      var Y = function (v) { return m.t + (o.yMax - v) / (o.yMax - o.yMin) * (H - m.t - m.b); };
+      o.yTicks.forEach(function (v) {
+        el('line', { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), 'class': v === o.yMin ? 'axis' : 'grid' }, s);
+        el('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end', 'class': 'tick' }, s).textContent = o.fmtTick(v);
+      });
+      o.xTicks.forEach(function (tk, i) {
+        var anchor = i === 0 ? 'start' : (i === o.xTicks.length - 1 ? 'end' : 'middle');
+        el('text', { x: X(Date.parse(tk[0] + 'T00:00:00Z')), y: H - 6, 'text-anchor': anchor, 'class': 'tick' }, s).textContent = tk[1];
+      });
+      var pts = data.map(function (p) { return [X(p.t), Y(p.v)]; });
+      var path = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join('L');
+      if (o.area) el('path', { d: path + 'L' + pts[pts.length - 1][0].toFixed(1) + ',' + Y(o.yMin) + 'L' + pts[0][0].toFixed(1) + ',' + Y(o.yMin) + 'Z', 'class': 'area' }, s);
+      el('path', { d: path, 'class': 'line', fill: 'none' }, s);
+      (o.marks || []).forEach(function (mk) {
+        var i = data.findIndex(function (q) { return q.d === mk.d; });
+        el('circle', { cx: pts[i][0], cy: pts[i][1], r: 4.5, 'class': 'dot' }, s);
+        el('text', { x: pts[i][0] + (mk.dx || 0), y: pts[i][1] + (mk.dy == null ? -10 : mk.dy), 'text-anchor': mk.anchor || 'middle', 'class': 'dlabel' }, s).textContent = mk.text;
+      });
+      var cross = el('line', { y1: m.t, y2: H - m.b, 'class': 'cross', visibility: 'hidden' }, s);
+      var cdot = el('circle', { r: 4.5, 'class': 'dot', visibility: 'hidden' }, s);
+      var idx = data.length - 1;
+      function at(i) {
+        idx = i;
+        cross.setAttribute('x1', pts[i][0]); cross.setAttribute('x2', pts[i][0]); cross.setAttribute('visibility', 'visible');
+        cdot.setAttribute('cx', pts[i][0]); cdot.setAttribute('cy', pts[i][1]); cdot.setAttribute('visibility', 'visible');
+        var r = s.getBoundingClientRect();
+        showTip([{ k: dayLabel(data[i].d) }, { v: o.fmt(data[i].v), k: o.unit }], r.left + pts[i][0], r.top + pts[i][1]);
+      }
+      function off() { cross.setAttribute('visibility', 'hidden'); cdot.setAttribute('visibility', 'hidden'); hideTip(); }
+      s.addEventListener('pointermove', function (e) {
+        var px = e.clientX - s.getBoundingClientRect().left, best = 0, bd = Infinity;
+        pts.forEach(function (p, i) { var dd = Math.abs(p[0] - px); if (dd < bd) { bd = dd; best = i; } });
+        at(best);
+      });
+      s.addEventListener('pointerleave', off);
+      s.addEventListener('focus', function () { at(idx); });
+      s.addEventListener('blur', off);
+      s.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { at(Math.max(0, idx - 1)); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { at(Math.min(data.length - 1, idx + 1)); e.preventDefault(); }
+      });
+    });
+  }
+
+  function columnChart(host, o) {
+    responsive(host, function (W) {
+      var H = o.height || 230, m = { t: 24, r: o.padRight || 8, b: 26, l: 40 };
+      host.textContent = '';
+      var s = el('svg', { height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': o.label, tabindex: 0 }, host);
+      var n = o.rows.length, band = (W - m.l - m.r) / n, bw = Math.min(24, Math.max(4, band - 2));
+      var Y = function (v) { return m.t + (o.yMax - v) / o.yMax * (H - m.t - m.b); }, base = Y(0);
+      o.yTicks.forEach(function (v) {
+        el('line', { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), 'class': v === 0 ? 'axis' : 'grid' }, s);
+        el('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end', 'class': 'tick' }, s).textContent = o.fmtTick(v);
+      });
+      var step = Math.max(1, Math.ceil(46 / band)), bars = [];
+      o.rows.forEach(function (r, i) {
+        var cx = m.l + band * (i + 0.5), y = Y(r.v), x = cx - bw / 2, rr = Math.min(4, bw / 2, base - y);
+        var d = 'M' + x + ',' + base + 'V' + (y + rr) + 'Q' + x + ',' + y + ' ' + (x + rr) + ',' + y + 'H' + (x + bw - rr) + 'Q' + (x + bw) + ',' + y + ' ' + (x + bw) + ',' + (y + rr) + 'V' + base + 'Z';
+        bars[i] = el('path', { d: d, 'class': 'bar' + (r.dim ? ' is-dim' : '') }, s);
+        if (i % step === 0) el('text', { x: cx, y: H - 6, 'text-anchor': 'middle', 'class': 'tick' }, s).textContent = monShort(r.d);
+        if (r.label) el('text', { x: cx, y: y - 6, 'text-anchor': 'middle', 'class': 'dlabel' }, s).textContent = r.label;
+      });
+      if (o.ref) {
+        el('line', { x1: m.l, x2: W - m.r, y1: Y(o.ref.v), y2: Y(o.ref.v), 'class': 'refline' }, s);
+        el('text', { x: W - m.r + 6, y: Y(o.ref.v) + 4, 'text-anchor': 'start', 'class': 'dlabel' }, s).textContent = o.ref.text;
+      }
+      var idx = n - 1;
+      function at(i) {
+        bars.forEach(function (b, j) { b.classList.toggle('is-hot', j === i); });
+        idx = i;
+        var r = s.getBoundingClientRect();
+        showTip(o.tip(o.rows[i]), r.left + m.l + band * (i + 0.5), r.top + Y(o.rows[i].v));
+      }
+      function off() { bars.forEach(function (b) { b.classList.remove('is-hot'); }); hideTip(); }
+      s.addEventListener('pointermove', function (e) {
+        var px = e.clientX - s.getBoundingClientRect().left;
+        at(Math.max(0, Math.min(n - 1, Math.floor((px - m.l) / band))));
+      });
+      s.addEventListener('pointerleave', off);
+      s.addEventListener('focus', function () { at(idx); });
+      s.addEventListener('blur', off);
+      s.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { at(Math.max(0, idx - 1)); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { at(Math.min(n - 1, idx + 1)); e.preventDefault(); }
+      });
+    });
+  }
+
+  function rankChart(id, k, fmt, tipLines) {
+    var host = document.getElementById(id);
+    var rows = PEERS.filter(function (p) { return p.m[k] != null; }).sort(function (a, b) { return b.m[k] - a.m[k]; });
+    var max = rows[0].m[k];
+    rows.forEach(function (p) {
+      var row = h('div', 'rank-row' + (p.x ? ' is-x' : ''), null, host);
+      row.tabIndex = 0;
+      h('span', 'rank-name', p.n, row);
+      var track = h('span', 'rank-track', null, row);
+      h('span', 'rank-bar', null, track).style.setProperty('--p', (p.m[k] / max).toFixed(4));
+      h('span', 'rank-val', fmt(p.m[k]), track);
+      function show(e) {
+        var r = row.getBoundingClientRect();
+        showTip([{ k: p.n }, { v: fmt(p.m[k]), k: '' }].concat(tipLines(p)), e && e.clientX ? e.clientX : r.left + r.width / 2, e && e.clientY ? e.clientY : r.top);
+      }
+      row.addEventListener('pointermove', show);
+      row.addEventListener('pointerleave', hideTip);
+      row.addEventListener('focus', function () { show(); });
+      row.addEventListener('blur', hideTip);
+    });
+    PEERS.filter(function (p) { return p.m[k] == null; }).forEach(function (p) {
+      var row = h('div', 'rank-row', null, host);
+      h('span', 'rank-name', p.n, row);
+      h('span', 'rank-track', null, row).appendChild(h('span', 'rank-na', 'нет данных о комиссиях'));
+    });
+  }
+
+  // Цена премаркета
+  lineChart(document.getElementById('c-price'), {
+    data: PX, label: 'Цена XTEN на премаркете Hyperliquid по дням', height: 240, padRight: 58,
+    yMin: 0.15, yMax: 0.30, yTicks: [0.15, 0.20, 0.25, 0.30],
+    fmtTick: function (v) { return '$' + v.toFixed(2); }, fmt: function (v) { return '$' + v.toFixed(3); }, unit: 'закрытие дня',
+    xTicks: [['2026-10-27', '27 окт'], ['2026-11-03', '3 ноя'], ['2026-11-10', '10 ноя'], ['2026-11-19', '19 ноя']],
+    marks: [{ d: '2026-10-30', text: '$0.289' }, { d: '2026-11-19', text: '$0.195', dx: 10, dy: 4, anchor: 'start' }]
+  });
+  tableView(document.getElementById('c-price').parentNode, ['Дата', 'Закрытие'], PX.map(function (r) { return [dayLabel(r[0]), '$' + r[1].toFixed(3)]; }));
+
+  // TVL
+  lineChart(document.getElementById('c-tvl'), {
+    data: TVL, label: 'TVL Extended по неделям, миллионы долларов', area: true, padRight: 44,
+    yMin: 0, yMax: 240, yTicks: [0, 60, 120, 180, 240],
+    fmtTick: function (v) { return String(v); }, fmt: function (v) { return '$' + v.toFixed(1) + 'M'; }, unit: 'TVL',
+    xTicks: [['2025-08-01', 'авг 25'], ['2026-02-01', 'фев 26'], ['2026-08-01', 'авг 26']],
+    marks: [{ d: '2026-02-04', text: '$218M' }, { d: '2026-11-19', text: '$98M', dx: 8, dy: 4, anchor: 'start' }]
+  });
+  tableView(document.getElementById('c-tvl').parentNode, ['Дата', 'TVL'], TVL.map(function (r) { return [dayLabel(r[0]), '$' + r[1].toFixed(1) + 'M']; }));
+
+  // Комиссии
+  columnChart(document.getElementById('c-fees'), {
+    label: 'Комиссии Extended по месяцам, миллионы долларов',
+    rows: FEES.map(function (r, i) { return { d: r[0], v: r[1], note: r[2], dim: i === FEES.length - 1, label: r[0] === '2026-01' ? '$6.0M' : (r[0] === '2026-10' ? '$1.6M' : null) }; }),
+    yMax: 7, yTicks: [0, 2, 4, 6], fmtTick: function (v) { return String(v); },
+    tip: function (r) { var a = [{ k: monLabel(r.d) + (r.note ? ', ' + r.note : '') }, { v: '$' + r.v.toFixed(2) + 'M', k: 'комиссии' }]; return a; }
+  });
+  tableView(document.getElementById('c-fees').parentNode, ['Месяц', 'Комиссии'], FEES.map(function (r) { return [monLabel(r[0]) + (r[2] ? ' (' + r[2] + ')' : ''), '$' + r[1].toFixed(2) + 'M']; }));
+
+  // Себестоимость поинта
+  columnChart(document.getElementById('c-cost'), {
+    label: 'Оценка себестоимости поинта по месяцам в долларах, линия на уровне 0.83', height: 260, padRight: 46,
+    rows: COST.map(function (r) { return { d: r[0], v: r[3], fees: r[1], pts: r[2], label: (r[0] === '2026-02' || r[0] === '2026-10') ? '$' + r[3].toFixed(2) : null }; }),
+    yMax: 1.6, yTicks: [0, 0.4, 0.8, 1.2, 1.6], fmtTick: function (v) { return v === 0 ? '0' : v.toFixed(1); },
+    ref: { v: 0.83, text: '$0.83' },
+    tip: function (r) { return [{ k: monLabel(r.d) }, { v: '$' + r.v.toFixed(2), k: 'за поинт, оценка' }, { v: '$' + r.fees.toFixed(2) + 'M', k: 'комиссии' }, { v: r.pts.toFixed(2) + 'M', k: 'поинтов по модели' }]; }
+  });
+  tableView(document.getElementById('c-cost').parentNode, ['Месяц', 'Комиссии', 'Поинты по модели', '$ за поинт'], COST.map(function (r) { return [monLabel(r[0]), '$' + r[1].toFixed(2) + 'M', r[2].toFixed(2) + 'M', '$' + r[3].toFixed(2)]; }));
+
+  // Сравнение
+  rankChart('r0', 0, function (v) { return (v >= 20 ? Math.round(v) : v.toFixed(1)) + 'x'; }, function (p) { return [{ v: money(p.fdv), k: 'FDV' }, { v: '$' + (p.fees * 365 / 30).toFixed(p.fees > 50 ? 0 : 1) + 'M', k: 'комиссий в год' }]; });
+  rankChart('r1', 1, function (v) { return v.toFixed(1); }, function (p) { return [{ v: money(p.fdv), k: 'FDV' }, { v: money(p.tvl), k: 'TVL' }]; });
+  rankChart('r2', 2, function (v) { return '$' + v + 'M'; }, function (p) { return [{ v: money(p.fdv), k: 'FDV' }, { v: '$' + p.vol.toFixed(1) + 'B', k: 'объём за 30 дней' }]; });
+  rankChart('r3', 3, function (v) { return v.toFixed(1); }, function (p) { return [{ v: money(p.fdv), k: 'FDV' }, { v: money(p.oi), k: 'открытый интерес' }]; });
+
+  (function () {
+    var t = document.getElementById('t-peers'), tr = h('tr', null, null, h('thead', null, null, t));
+    ['Декс', 'FDV', 'Капа', 'Комиссии 30д', 'TVL', 'Объём 30д', 'OI'].forEach(function (x) { h('th', null, x, tr); });
+    var tb = h('tbody', null, null, t);
+    PEERS.forEach(function (p) {
+      var row = h('tr', p.x ? 'is-x' : null, null, tb);
+      [p.n, money(p.fdv), money(p.mc), p.fees == null ? 'нет данных' : '$' + p.fees.toFixed(p.fees >= 100 ? 1 : 2) + 'M', money(p.tvl), '$' + p.vol.toFixed(1) + 'B', money(p.oi)].forEach(function (c) { h('td', null, c, row); });
+    });
+  })();
+
+  // Подписи в сегментах: скрыть, если не помещаются
+  function fitSeg() {
+    document.querySelectorAll('#seg .seg-part').forEach(function (part) {
+      var lab = part.firstElementChild;
+      lab.hidden = false;
+      lab.hidden = lab.offsetWidth + 14 > part.clientWidth;
+    });
+  }
+  redraws.push(fitSeg);
+  fitSeg();
+
+  var raf = 0;
+  function all() { cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { redraws.forEach(function (f) { f(); }); }); }
+  if (window.ResizeObserver) new ResizeObserver(all).observe(document.querySelector('.wrap'));
+  window.addEventListener('resize', all);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSeg);
+})();
+</script>
+</body>
+</html>
