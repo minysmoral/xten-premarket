@@ -1,6 +1,6 @@
 # XTEN на премаркете
 
-Оценка токена Extended (XTEN) по цене премаркета Hyperliquid. Данные на 19 ноября 2026.
+Оценка токена Extended (XTEN) по цене премаркета Hyperliquid. Данные на 20 ноября 2026.
 
 Страница: https://minysmoral.github.io/xten-premarket/
 
